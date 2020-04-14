@@ -29,13 +29,13 @@ router.post("/users/login", async (req, res) => {
         let newObject = Object.assign({ user, token }); // use toJSON to hide data
         res.status(200).send(newObject);
     } catch (e) {
-        res.status(500).send(e.message);
+        res.status(400).send(e.message);
     }
 });
 
 router.post("/users/logout", auth, async (req, res) => {
     try {
-        req.user.tokens = req.user.tokens.filter(token => {
+        req.user.tokens = req.user.tokens.filter((token) => {
             return token.token !== req.token;
         });
         //console.log(req.user);
@@ -58,7 +58,7 @@ router.post("/users/logoutAll", auth, async (req, res) => {
 });
 
 router.get("/users/me", auth, async (req, res) => {
-    res.send(req.user);
+    res.status(200).send(req.user);
 });
 
 router.patch("/users/:id", async (req, res) => {
@@ -66,7 +66,7 @@ router.patch("/users/:id", async (req, res) => {
     let allowedProperties = ["name", "email", "password", "age"];
     var breakException = {};
     try {
-        updates.forEach(property => {
+        updates.forEach((property) => {
             // console.log(property);
             if (allowedProperties.indexOf(property) == -1) {
                 throw breakException;
@@ -79,7 +79,7 @@ router.patch("/users/:id", async (req, res) => {
     try {
         /* in order to use Schema pre password hashing */
         const user = await User.findById({ _id: req.params.id });
-        updates.forEach(update => (user[update] = req.body[update]));
+        updates.forEach((update) => (user[update] = req.body[update]));
         await user.save();
         //     { _id: req.params.id },
         // const user = await User.findByIdAndUpdate(
@@ -113,7 +113,7 @@ router.delete("/users/me", auth, async (req, res) => {
         if (!user) {
             return res.status(404).send();
         }
-        res.status(404).send(user);
+        res.status(200).send(user);
     } catch (e) {
         res.status(500).send(e);
     }
@@ -122,14 +122,14 @@ router.delete("/users/me", auth, async (req, res) => {
 const upload = multer({
     //dest: "avatars",
     limits: {
-        fileSize: 1000000
+        fileSize: 1000000,
     },
     fileFilter(req, file, cb) {
         if (!file.originalname.match(/\.(jpg|jpeg|png)/)) {
             return cb(new Error("Please upload an image"));
         }
         cb(undefined, true);
-    }
+    },
 });
 
 router.post(
@@ -137,10 +137,7 @@ router.post(
     auth,
     upload.single("avatar"),
     async (req, res) => {
-        const buffer = await sharp(req.file.buffer)
-            .resize({ width: 250, height: 250 })
-            .png()
-            .toBuffer();
+        const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer();
         req.user.avatar = buffer;
         await req.user.save();
         res.send({ user: req.user });
