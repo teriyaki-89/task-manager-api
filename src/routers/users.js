@@ -140,7 +140,7 @@ router.post(
         const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer();
         req.user.avatar = buffer;
         await req.user.save();
-        res.send({ user: req.user });
+        res.send({ user: req.user }).status(200);
     },
     (e, req, res, next) => {
         res.status(400).send({ error: e.message });
@@ -160,10 +160,19 @@ router.get("/users/:id/avatar", async (req, res) => {
             throw new Error("no avatar or no user found");
         }
         res.set("Content-Type", "image/jpg");
-        res.send(user.avatar);
+        res.status(200).send(user.avatar);
     } catch (e) {
         res.status(500).send({ error: e.message });
     }
 });
+
+// router.get("/users/me/avatar", async (req, res) => {
+//     try {
+//         console.log(req.body);
+//         res.status(200).send({});
+//     } catch (e) {
+//         res.status(500).send({ error: e.message });
+//     }
+// });
 
 module.exports = router;
